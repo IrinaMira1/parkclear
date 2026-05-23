@@ -1,0 +1,46 @@
+{
+  "name": "parkclear",
+  "description": "AI-powered parking intelligence for San Francisco",
+  "version": "0.1.0",
+  "runtime": "deno",
+  "functions": {
+    "getNearbyParking": {
+      "path": "functions/getNearbyParking.ts",
+      "method": "POST"
+    },
+    "getParkingPrice": {
+      "path": "functions/getParkingPrice.ts",
+      "method": "POST"
+    }
+  },
+  "database": {
+    "schema": {
+      "ParkingGarage": {
+        "fields": {
+          "id": { "type": "string", "primaryKey": true },
+          "place_id": { "type": "string", "index": true },
+          "name": { "type": "string" },
+          "address": { "type": "string" },
+          "lat": { "type": "float" },
+          "lng": { "type": "float" },
+          "operator": { "type": "string" },
+          "hourly_rate": { "type": "float" },
+          "daily_rate": { "type": "float" },
+          "monthly_rate": { "type": "float" },
+          "hours": { "type": "json" },
+          "last_updated": { "type": "timestamp" }
+        }
+      },
+      "PriceReport": {
+        "fields": {
+          "id": { "type": "string", "primaryKey": true },
+          "garage_id": { "type": "string", "foreignKey": "ParkingGarage" },
+          "price": { "type": "float" },
+          "user_id": { "type": "string" },
+          "verified": { "type": "boolean" },
+          "created_at": { "type": "timestamp" }
+        }
+      }
+    }
+  }
+}
