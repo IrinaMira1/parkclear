@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import ParkingMap from '../components/map/ParkingMap'
 import GarageBottomSheet from '../components/garage/GarageBottomSheet'
 import AssistantSheet from '../components/assistant/AssistantSheet'

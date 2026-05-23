@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import type { ParkingGarage, MapBounds, PricingState } from '../lib/types'
+import type { ParkingGarage, PricingState } from '../lib/types'
 import { getNearbyParking, getParkingPrice } from '../lib/api'
 
 const RATE_LIMIT_MS = 4000

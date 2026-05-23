@@ -4,10 +4,10 @@ import { scanParkingSign } from '../../lib/api'
 
 interface ScanSignFlowProps {
   onClose: () => void
-  garage: ParkingGarage
+  garage?: ParkingGarage
 }
 
-export default function ScanSignFlow({ onClose, garage }: ScanSignFlowProps) {
+export default function ScanSignFlow({ onClose }: ScanSignFlowProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [cameraActive, setCameraActive] = useState(true)
