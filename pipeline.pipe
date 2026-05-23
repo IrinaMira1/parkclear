@@ -1,0 +1,77 @@
+pipeline ParkClear:
+  name: "ParkClear Parking Discovery & Enrichment"
+  version: "0.1.0"
+
+  # Input: Map bounds and user location
+  input:
+    lat: number
+    lng: number
+    radius: number = 2000
+
+  # Step 1: Discover nearby parking via Base44
+  step discover_parking:
+    action: "http"
+    method: "POST"
+    uri: "${BASE44_API}/functions/getNearbyParking"
+    headers:
+      Content-Type: "application/json"
+      Authorization: "Bearer ${BASE44_TOKEN}"
+    body:
+      lat: ${lat}
+      lng: ${lng}
+      radius: ${radius}
+    output: garages
+
+  # Step 2: Enrich each garage with pricing
+  step enrich_prices:
+    action: "parallel"
+    for_each: ${garages.results}
+    parallel_limit: 3  # Rate limit to 3 concurrent
+    steps:
+      - action: "http"
+        method: "POST"
+        uri: "${BASE44_API}/functions/getParkingPrice"
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Bearer ${BASE44_TOKEN}"
+        body:
+          name: ${item.name}
+          address: ${item.vicinity}
+        output: pricing_${item.place_id}
+
+  # Step 3: Merge results and apply confidence scoring
+  step score_confidence:
+    action: "transform"
+    input: ${enrich_prices}
+    script: |
+      const enriched = garages.results.map(garage => {
+        const pricing = pricing_${garage.place_id};
+        const confidence = pricing?.confidence || 0;
+
+        let pricingState = 'unknown';
+        if (confidence >= 70) pricingState = 'verified';
+        else if (confidence >= 35) pricingState = 'estimated';
+        else if (confidence > 0) pricingState = 'needs_scan';
+
+        return {
+          id: garage.place_id,
+          ...garage,
+          price: pricing?.price,
+          hourly_rate: pricing?.hourly,
+          daily_rate: pricing?.daily,
+          monthly_rate: pricing?.monthly,
+          operator: pricing?.operator,
+          confidence_score: confidence,
+          pricingState,
+          lastUpdated: Date.now()
+        };
+      });
+
+      return { garages: enriched };
+    output: enriched_garages
+
+  # Output: Ready for frontend
+  output:
+    garages: ${enriched_garages.garages}
+    status: "success"
+    timestamp: ${Date.now()}
